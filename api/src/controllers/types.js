@@ -1,0 +1,1 @@
+const {Type} = require('../db'); //Trae los modelos

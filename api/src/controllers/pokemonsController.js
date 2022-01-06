@@ -1,7 +1,7 @@
 const {Pokemon, Type, Op} = require('../db');
 const axios = require('axios');
 
-const getPokemons = async (req, res, next) => {
+const getPokemons = async (req, res) => {
     try {
         let {
             name,
@@ -10,16 +10,15 @@ const getPokemons = async (req, res, next) => {
 
         let informationAPI;
         let informationDataBase;
-        let allData = [];
+        let allData = [];  
 
         if (name && name !== "") {
-           const responseB = (await axios.get(`https://pokeapi.co/api/v2/pokemon/${name}`)).data;
+           const byNameAPI = (await axios.get(`https://pokeapi.co/api/v2/pokemon/${name.toLowerCase()}`)).data;
            informationAPI = {
-               image: responseB.sprites.front_default,
-               name: responseB.name,
-               types: responseB.types[0].type.name,
-               id: responseB.id,
-               createdInDatabase: responseB.createdInDatabase
+               image: byNameAPI.sprites.front_default,
+               name: byNameAPI.name,
+               types: byNameAPI.types[0].type.name,
+               id: byNameAPI.id,
            }
 
            informationDataBase = await Pokemon.findAll({
@@ -29,18 +28,14 @@ const getPokemons = async (req, res, next) => {
                    through: {
                        attributes: []
                 }
-               },
-               where: {
-                   name: {
-                       [Op.iLike]: `%${name}%`
-                   }
                }
            });
            informationDataBase = informationDataBase.map(el => {
                return {
-                   image: el.sprites.front_default,
+                //    image: el.image,
                    name: el.name,
                    types: el.types,
+                   id: el.id,
                    createdInDatabase: el.createdInDatabase
                }
            })
@@ -59,7 +54,7 @@ const getPokemons = async (req, res, next) => {
                     image: e.data.sprites.front_default,
                     name: e.data.name,
                     types: e.data.types[0].type.name,
-                    createdInDatabase: e.createdInDatabase
+                    id: e.data.id
                 }
             });
             informationDataBase = await Pokemon.findAll({
@@ -73,9 +68,10 @@ const getPokemons = async (req, res, next) => {
             });
             informationDataBase = informationDataBase.map(el => {
                 return {
-                    image: el.sprites.front_default,
+                    // image: el.image,
                     name: el.name,
                     types: el.types,
+                    id: el.id,
                     createdInDatabase: el.createdInDatabase
                 }
             })
@@ -100,18 +96,18 @@ const getPokemons = async (req, res, next) => {
             return res.json(allData);
           }
     } catch (error) {
-        next (error)
-        // return res.status(400).send({message: fallo});
+        next (error) 
+        return res.status(400).send({message: fallo});
     }
 }
 
 //#region Función para id
-const getPokemonsById = async (req, res) => {
+const getPokemonsById = async (req, res, next) => {
     const id = req.params.id;
-    if(id) {
+    if (id) {
         try {
-            if (!id.includes("-")) { //si no incluye un guion es de la api
-                const byIdApi = await axios.get(`https://pokeapi.co/api/v2/pokemon/${id}`)
+            if (!id.includes("-")) {
+                const byIdApi = await axios.get(`https://pokeapi.co/api/v2/pokemon/${id}`);
                 const myDataByApi = {
                     image: byIdApi.data.sprites.front_default,
                     name: byIdApi.data.name,
@@ -123,18 +119,14 @@ const getPokemonsById = async (req, res) => {
                     speed: byIdApi.data.stats[5].base_stat,
                     height: byIdApi.data.height,
                     weight: byIdApi.data.weight
-                }
-                console.log(myDataByApi); 
+                };
                 res.json(myDataByApi);
             } else {
-                const byIdDB = await Pokemon.findAll({
-                    include: {
-                        model: Type,
-                        attributes: ["name"],
-                        through: {
-                            attributes: []
-                        }
-                    }
+                const byIdDB = await Pokemon.findOne({
+                    where: {
+                        id: id
+                    },
+                    include: Type
                 });
                 const myDataByDB = {
                     image: byIdDB.image,
@@ -146,18 +138,19 @@ const getPokemonsById = async (req, res) => {
                     defense: byIdDB.defense,
                     speed: byIdDB.speed,
                     height: byIdDB.height,
-                    weight: byIdDB.weight
+                    weight: byIdDB.weight,
+                    createdInDatabase: byIdDB.createdInDatabase
+                };
+                if (!byIdDB) {
+                    return res.status(400).send({ message: "It was not found" });
                 }
-                if(!byIdDB) {
-                   res.status(400).send({message: "No se encontro el pokemon"})
-                }
-                res.json(myDataByDB)
+                return res.json(myDataByDB);
             }
         } catch (error) {
-            res.status(400).send({message: "No se pudo procesar su solicitud"})
+            next(error);
         }
     }
-}
+};
 //#endregion
 
 

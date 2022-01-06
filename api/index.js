@@ -25,10 +25,10 @@ const { conn, Type } = require('./src/db.js');
 conn.sync({ force: true }).then(() => {
   server.listen(3001, async () => {
     const responseTypes = await axios.get("https://pokeapi.co/api/v2/type");
-    const myTypes = responseTypes.data.results;
-    myTypes.map (async el => {
-      await Type.create({name: el.name})
-    })
+    const myDataTypes = responseTypes.data.results;
+    myDataTypes.map(async el => {
+      await Type.create({name: el.name});
+    });
     console.log('%s listening at 3001'); // eslint-disable-line no-console
   });
 });

@@ -1,6 +1,7 @@
-const {Pokemon, Type, Op} = require('../db');
+const { Pokemon, Type } = require('../db');
 const axios = require('axios');
 
+//#region función para buscar por query o toda la información 
 const getPokemons = async (req, res) => {
     try {
         let {
@@ -10,36 +11,40 @@ const getPokemons = async (req, res) => {
 
         let informationAPI;
         let informationDataBase;
-        let allData = [];  
+        let allData = [];   
 
         if (name && name !== "") {
-           const byNameAPI = (await axios.get(`https://pokeapi.co/api/v2/pokemon/${name.toLowerCase()}`)).data;
-           informationAPI = {
-               image: byNameAPI.sprites.front_default,
-               name: byNameAPI.name,
-               types: byNameAPI.types[0].type.name,
-               id: byNameAPI.id,
-           }
-
-           informationDataBase = await Pokemon.findAll({
-               include: {
-                   model: Type,
-                   attributes: ["name"],
-                   through: {
-                       attributes: []
+            informationDataBase = await Pokemon.findOne({
+                include: {
+                    model: Type,
+                    attributes: ["name"],
+                    through: {
+                        attributes: []
+                    } 
+                },
+                where:{
+                    name
                 }
-               }
-           });
-           informationDataBase = informationDataBase.map(el => {
-               return {
-                //    image: el.image,
-                   name: el.name,
-                   types: el.types,
-                   id: el.id,
-                   createdInDatabase: el.createdInDatabase
-               }
-           })
-           allData = informationDataBase.concat(informationAPI);
+            });
+            const byNameAPI = !informationDataBase ? (await axios.get(`https://pokeapi.co/api/v2/pokemon/${name.toLowerCase()}`)).data : false;
+            if (informationDataBase !== null) {
+                informationDataBase = informationDataBase.dataValues;
+                // informationDataBase = informationDataBase.map(e => {
+                //     return {
+                //         name: e.name,
+                //         types: e.types,
+                //         id: e.id,
+                //         createdInDatabase: e.createdInDatabase
+                //     }
+                // });
+            }
+            informationAPI = byNameAPI && {
+                image: byNameAPI.sprites.front_default,
+                name: byNameAPI.name,
+                types: byNameAPI.types[0].type.name,
+                id: byNameAPI.id,
+            }
+            allData = byNameAPI ? informationAPI : informationDataBase;
         } else {
             const myPokemonsOnPageOne = (await axios.get("https://pokeapi.co/api/v2/pokemon")).data.results;
             const myInformationOne = myPokemonsOnPageOne.map(el => axios.get(el.url));
@@ -63,43 +68,49 @@ const getPokemons = async (req, res) => {
                     attributes: ["name"],
                     through: {
                         attributes: []
+                    }
                  }
-                }
-            });
-            informationDataBase = informationDataBase.map(el => {
-                return {
+                });
+                informationDataBase = informationDataBase.map(el => {
+                    return {
                     // image: el.image,
                     name: el.name,
                     types: el.types,
                     id: el.id,
                     createdInDatabase: el.createdInDatabase
                 }
-            })
+            });
             allData = informationDataBase.concat(informationAPI);
         }
-
         //#region order
-        if (order === "asc" || !order || order === "") {
-            allData = allData.sort((a, b) => {
-                return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
-            });
-        } else {
-            allData = allData.sort((a, b) => {
-                return b.name.toLowerCase().localeCompare(a.name.toLowerCase());
-            });
+        if (Array.isArray(allData)) {
+            if (order === "asc" || !order || order === "") {
+                allData = allData.sort((a, b) => {
+                    return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+                });
+            } else {
+                allData = allData.sort((a, b) => {
+                    return b.name.toLowerCase().localeCompare(a.name.toLowerCase());
+                });
+            }
         }
         //#endregion
-
         if (allData.length === 0) {
             res.status(400).json({message: "Not Found"})
-          } else {
+        } else {
             return res.json(allData);
-          }
+        }
     } catch (error) {
-        next (error) 
-        return res.status(400).send({message: fallo});
+        if (error.response !== undefined) {
+            console.log(error.response.data);
+            return res.status(400).send({message: "Pokemón not found"});
+        } else {
+            console.log(error);
+            return res.status(400).send({message: "unexpected error"});
+        }
     }
 }
+//#endregion
 
 //#region Función para id
 const getPokemonsById = async (req, res, next) => {

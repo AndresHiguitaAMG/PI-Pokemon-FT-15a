@@ -37,9 +37,9 @@ const getPokemons = async (req, res) => {
                 //         createdInDatabase: e.createdInDatabase
                 //     }
                 // });
-            }
+            } 
             informationAPI = byNameAPI && {
-                image: byNameAPI.sprites.front_default,
+                image: byNameAPI.sprites.front_shiny,
                 name: byNameAPI.name,
                 types: byNameAPI.types[0].type.name,
                 id: byNameAPI.id,
@@ -56,7 +56,7 @@ const getPokemons = async (req, res) => {
             const myObject = await Promise.all(myInformation);
             informationAPI = myObject.map(e => {
                 return {
-                    image: e.data.sprites.front_default,
+                    image: e.data.sprites.front_shiny,
                     name: e.data.name,
                     types: e.data.types[0].type.name,
                     id: e.data.id
@@ -87,7 +87,7 @@ const getPokemons = async (req, res) => {
             if (order === "asc" || !order || order === "") {
                 allData = allData.sort((a, b) => {
                     return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
-                });
+                }); 
             } else {
                 allData = allData.sort((a, b) => {
                     return b.name.toLowerCase().localeCompare(a.name.toLowerCase());

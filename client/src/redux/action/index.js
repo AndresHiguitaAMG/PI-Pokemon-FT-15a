@@ -6,7 +6,7 @@ export const REMOVE_POKEMON = 'REMOVE_POKEMON';
 
 export const getPokemons = ({ name, order }) => {
     return (dispatch) => {
-        axios.get(`http://localhost:3001/pokemons?order=${order ? order : ""}name=${name ? name : ""}`)
+        axios.get(`http://localhost:3001/pokemons?order=${order ? order : ""}&name=${name ? name : ""}`)
         .then (responseApi => {
             return dispatch ({
                 type: GET_POKEMONS,

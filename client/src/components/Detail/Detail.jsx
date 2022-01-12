@@ -15,9 +15,37 @@ const Detail = (props) => {
             dispatch(removePokemon());
         }
     }, [dispatch, id])
+
+    const handleGoToBack = () => {
+        history.goBack();
+    }
+
     return (
         <div>
-            
+            <button onClick={handleGoToBack}>To return ◀</button>
+
+            {
+                pokemons.name ? 
+                <>
+                <div>
+                    <img src={pokemons.image} alt="img not found" width="400px" heigth="290px" />
+                </div>
+                
+                <div>
+                    <h2>{pokemons.name}</h2>
+                </div>
+
+                <div>
+                    <h3>{pokemons.types}</h3>
+                </div>
+                </>
+
+                :
+
+                <div>
+                    Loading...
+                </div>
+            }
         </div>
     )
 }

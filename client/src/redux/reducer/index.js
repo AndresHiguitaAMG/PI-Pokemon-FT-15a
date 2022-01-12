@@ -24,13 +24,13 @@ export default function reducer (state = initialState, { type, payload }) {
         case GET_POKEMONS_BY_ID:
             return {
                 ...state,
-                pokemon: payload
+                pokemons: payload
             }
             
         case REMOVE_POKEMON:
             return {
                 ...state,
-                pokemon: payload
+                pokemons: payload
             }   
             default:
                 return state;

@@ -1,16 +1,20 @@
 const { Pokemon, Type, Op } = require('../db');
 const axios = require('axios');
-// const answerbyName = require('../assistant/index');
 
 //#region función para buscar por query o toda la información 
-const getPokemons = async (req, res, next) => {
-    const name = req.query.name;
+const getPokemons = async (req, res) => {
+    let {
+        name,
+        page 
+    } = req.query
+    page = page ? page : 1;
+    const pokemonsPerPage = 9;
     if (name) {
         try {
             const InformationNameDataBase = await Pokemon.findOne({
                 where: {
                     name: {
-                        [Op.iLike]: `%${name}%`,
+                        [Op.iLike]: `%${name}%`, 
                     },
                 },
                 include: {
@@ -47,14 +51,14 @@ const getPokemons = async (req, res, next) => {
                 }
             }
         });
-        informationDataBase = informationDataBase.map(el => {
-            return {
-                name: el.name,
-                types: el.types,
-                id: el.id,
-                createdInDatabase: el.createdInDatabase
-            }
-        });
+        // informationDataBase = informationDataBase.map(el => {
+        //     return {
+        //         name: el.name,
+        //         types: el.types,
+        //         id: el.id,
+        //         createdInDatabase: el.createdInDatabase
+        //     }
+        // });
         const myPokemonsOnPageOne = (await axios.get("https://pokeapi.co/api/v2/pokemon")).data.results;
         const myInformationOne = myPokemonsOnPageOne.map(el => axios.get(el.url));
         const myPokemonsOnPageTwo = (await axios.get("https://pokeapi.co/api/v2/pokemon")).data;
@@ -72,11 +76,15 @@ const getPokemons = async (req, res, next) => {
                }
            });
            const allPokemons = informationAPI.concat(informationDataBase)
-           return res.json(allPokemons);
+           let result = allPokemons.slice((pokemonsPerPage * (page - 1)), (pokemonsPerPage * (page - 1)) + pokemonsPerPage)
+           return res.json({
+            //Envío al front el resultado, lo que van a mostrar, en pocas palabras la pagina cortada
+            result: result,
+            //Resultado total
+            count: allPokemons.length});  
     }
+    
 }
-
-
 //#endregion
 
 //#region Función para id
@@ -120,7 +128,7 @@ const getPokemonsById = async (req, res, next) => {
                     createdInDatabase: byIdDB.createdInDatabase
                 };
                 if (!byIdDB) {
-                    return res.status(400).send({ message: "It was not found" });
+                    return res.status(404).send({ message: "It was not found" });
                 }
                 return res.json(myDataByDB);
             }

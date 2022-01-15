@@ -3,10 +3,11 @@ export const GET_POKEMONS = 'GET_POKEMONS';
 export const SET_NAME = 'SET_NAME';
 export const GET_POKEMONS_BY_ID = 'GET_POKEMONS_BY_ID';
 export const REMOVE_POKEMON = 'REMOVE_POKEMON';
+export const SET_PAGE = 'SET_PAGE';
 
-export const getPokemons = ({ name, order }) => {
+export const getPokemons = ({ page }) => {
     return (dispatch) => {
-        axios.get(`http://localhost:3001/pokemons?order=${order ? order : ""}&name=${name ? name : ""}`)
+        axios.get(`http://localhost:3001/pokemons?page=${page ? page : 1}`)
         .then (responseApi => {
             return dispatch ({
                 type: GET_POKEMONS,
@@ -15,6 +16,13 @@ export const getPokemons = ({ name, order }) => {
         }).catch((error) => {
             console.log(error);
         });
+    }
+}
+
+export function setPage(page){
+    return{
+        type: SET_PAGE,
+        payload: page
     }
 }
 
@@ -45,3 +53,4 @@ export const removePokemon = () => {
         payload: {}
     }
 }
+

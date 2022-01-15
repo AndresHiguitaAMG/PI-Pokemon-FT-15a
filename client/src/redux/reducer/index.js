@@ -1,9 +1,10 @@
-import { GET_POKEMONS, SET_NAME, GET_POKEMONS_BY_ID, REMOVE_POKEMON } from '../action/index';
+import { GET_POKEMONS, GET_POKEMONS_BY_ID, REMOVE_POKEMON, SET_PAGE } from '../action/index';
 
 const initialState = {
     allPokemons: [],
     pokemons: [],
-    name: ""
+    name: "",
+    page: 1
 }
 
 export default function reducer (state = initialState, { type, payload }) {
@@ -14,12 +15,18 @@ export default function reducer (state = initialState, { type, payload }) {
                 allPokemons: payload,
                 pokemons: payload
             }
-            
-        case SET_NAME:
-            return {
+
+            case SET_PAGE:
+            return{
                 ...state,
-                name: payload
+                page: payload
             }
+            
+        // case SET_NAME:
+        //     return {
+        //         ...state,
+        //         name: payload
+        //     }
             
         case GET_POKEMONS_BY_ID:
             return {
@@ -31,7 +38,7 @@ export default function reducer (state = initialState, { type, payload }) {
             return {
                 ...state,
                 pokemons: payload
-            }   
+            }  
             default:
                 return state;
             }
